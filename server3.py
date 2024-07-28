@@ -148,12 +148,12 @@ def order_book(orders, book, stock_name):
 
 def generate_csv():
     """ Generate a CSV of order history. """
-    with open('test.csv', 'wb') as f:
+    with open('test.csv', 'w', newline='', encoding='utf-8') as f: #Changed the opening mode from binary to write text.
         writer = csv.writer(f)
         for t, stock, side, order, size in orders(market()):
             if t > MARKET_OPEN + SIM_LENGTH:
                 break
-            writer.writerow([t, stock, side, order, size])
+            writer.writerow([t.isoformat(), stock, side, order, size]) #String convertion of datetime. 
 
 
 def read_csv():
@@ -257,10 +257,20 @@ class App(object):
     def __init__(self):
         self._book_1 = dict()
         self._book_2 = dict()
+        '''debugging'''
+        csv_data = list(read_csv())
+        if not csv_data:
+            print("Warning: CSV file is empty or could not be read.")
+            return
+        print(f"Read {len(csv_data)} lines from CSV.")
         self._data_1 = order_book(read_csv(), self._book_1, 'ABC')
         self._data_2 = order_book(read_csv(), self._book_2, 'DEF')
         self._rt_start = datetime.now()
-        self._sim_start, _, _ = next(self._data_1)
+        try:
+            self._sim_start, _, _ = next(self._data_1)
+        except StopIteration:
+            print("Error: Could not get first item from _data_1.")
+            return
         self.read_10_first_lines()
 
     @property
@@ -282,9 +292,17 @@ class App(object):
                 yield t, bids, asks
 
     def read_10_first_lines(self):
-        for _ in iter(range(10)):
-            next(self._data_1)
-            next(self._data_2)
+        for _ in range(10):
+            try:
+                next(self._data_1)
+                next(self._data_2)
+            except StopIteration:
+                print(f"Warning: Reached end of data after {_} lines.")
+                break
+        
+        # for _ in iter(range(10)):
+        #     next(self._data_1)
+        #     next(self._data_2)
 
     @route('/query')
     def handle_query(self, x):
