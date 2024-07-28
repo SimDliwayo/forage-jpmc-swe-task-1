@@ -299,10 +299,6 @@ class App(object):
             except StopIteration:
                 print(f"Warning: Reached end of data after {_} lines.")
                 break
-        
-        # for _ in iter(range(10)):
-        #     next(self._data_1)
-        #     next(self._data_2)
 
     @route('/query')
     def handle_query(self, x):
